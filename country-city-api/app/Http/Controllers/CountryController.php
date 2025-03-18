@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CityResource;
 use App\Models\Country;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,8 @@ class CountryController extends Controller
 
     public function get_country_cities($id)
     {
-        return response()->json(Country::with('cities')->findOrFail($id)->cities);
+        $country = Country::with('cities')->findOrFail($id);
+        return CityResource::collection($country->cities); 
     }
 
     public function get_country_population($id)
@@ -49,6 +51,12 @@ class CountryController extends Controller
     public function search_country(Request $request)
     {
         $request->validate(['name' => 'required']);
-        return response()->json(Country::where('name', 'like', '%' . $request->name . '%')->get());
+        $countries = Country::where('name', 'like', '%' . $request->name . '%')->get();
+    
+        if ($countries->isEmpty()) {
+            return response()->json(['message' => 'Ölkə tapılmadı'], 404);
+        }
+    
+        return response()->json($countries);
     }
 }
